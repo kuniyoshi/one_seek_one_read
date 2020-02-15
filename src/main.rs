@@ -5,35 +5,34 @@ use std::path::Path;
 
 #[derive(Debug)]
 struct Record {
-    name: String,
+    path: String,
     size: i32,
+    hash: String,
 }
 
-const ROOT_DIR: &'static str = "resource.d";
+const ARCHIVE: &'static str = "archive.data";
 
 fn main( ) -> Result<(), io::Error> {
     let mut records: Vec<Record> = vec![];
 
-    for result in BufReader::new( File::open( "resource.list" )? ).lines( ) {
+    for result in BufReader::new( File::open( "resource.index" )? ).lines( ) {
         let line = result?;
         let fields: Vec<&str> = line.split( '\t' ).collect( );
         let size: i32 = fields[1].parse( ).unwrap();
         let record = Record {
-            name: fields[0].to_string( ),
+            path: fields[0].to_string( ),
             size: size,
+            hash: fields[2].to_string( ),
         };
 
-//        println!( "{:?}", record );
+        println!( "{:?}", record );
 
         records.push( record );
     }
 
-    let root = Path::new( ROOT_DIR );
-
     for record in &records {
-        let path = root.join( &record.name );
-        println!( "{:?}", path );
-        let mut file = File::open( path )?;
+        println!( "{:?}", record.path );
+        let mut file = File::open( &record.path )?;
         let mut data = Vec::new();
         file.read_to_end( &mut data )?;
     }

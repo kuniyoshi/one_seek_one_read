@@ -7,6 +7,7 @@ use open qw( :utf8 :std );
 use Data::Dumper;
 use Path::Class qw( dir );
 use Fcntl qw( O_WRONLY O_RDONLY O_CREAT );
+use Digest::SHA1 qw( sha1_hex );
 
 our $out_dir
     or die usage( );
@@ -19,6 +20,8 @@ sysopen my $RANDOM, "/dev/random", O_RDONLY
 
 binmode $RANDOM
     or die "Could not set mode: $!";
+
+my @records;
 
 while ( <> ) {
     chomp( my $line = $_ );
@@ -33,7 +36,7 @@ warn "--- size: $size";
     die "Could not read random: $!"
         unless defined $length;
 
-warn "--- read: $length";
+        #warn "--- read: $length";
 
     sysopen my $OUT, $file, O_WRONLY | O_CREAT
         or die "Could not open $file: $!";
@@ -45,9 +48,9 @@ warn "--- read: $length";
     my $offset = 0;
 
     while ( $length ) {
-warn "... writing.";
+        #warn "... writing.";
         my $written = syswrite $OUT, $data, $block_size, $offset;
-warn "... wrote";
+        #warn "... wrote";
 
         die "Could not write to $file: $!"
             unless defined $written;
@@ -58,11 +61,17 @@ warn "... wrote";
 
     close $OUT
         or die "Could not close $file: $!";
-warn "close";
+    #warn "close";
+
+    push @records, [ "$file", $size, sha1_hex( $data ) ];
 }
 
 close $RANDOM
     or die $!;
+
+for my $record_ref ( @records ) {
+    say join "\t", @{ $record_ref };
+}
 
 exit;
 

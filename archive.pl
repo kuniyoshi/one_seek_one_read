@@ -5,19 +5,10 @@ use strict;
 use warnings;
 use open qw( :utf8 :std );
 use Data::Dumper;
-use Path::Class qw( dir );
 use Fcntl qw( O_RDONLY O_WRONLY O_CREAT );
-
-our $in
-    or die usage( );
 
 our $out
     or die usage( );
-
-my $root = dir( $in );
-
-die "No resource directory found"
-    unless -e $root;
 
 sysopen my $OUT, $out, O_WRONLY | O_CREAT
     or die "Could not open $out for write: $!";
@@ -29,29 +20,28 @@ my @records;
 
 while ( <> ) {
     chomp( my $line = $_ );
-    my( $path, $size ) = split m{\t}, $line;
-    my $file = $root->file( $path );
-warn "### file; $file";
+    my( $path, $size, $hash ) = split m{\t}, $line;
+warn "### path; $path";
 
-    sysopen my $IN, $file, O_RDONLY
-        or die "Could not open $file: $!";
+    sysopen my $IN, $path, O_RDONLY
+        or die "Could not open $path $!";
 
     binmode $IN
         or die "Could not set mode: $!";
 
     my $data;
     my $length = sysread $IN, $data, $size;
-    die "Could not read $file: $!"
+    die "Could not read $path $!"
         unless defined $length;
 
     close $IN
-        or die "Could not close $file: $!";
+        or die "Could not close $path $!";
 
     my $written = syswrite $OUT, $data, $length;
     die "Could not write data to $out: $!"
         unless defined $written;
 
-    push @records, [ $file, $size ];
+    push @records, [ $path, $size, $hash ];
 }
 
 close $OUT
@@ -65,6 +55,6 @@ exit;
 
 sub usage {
     return <<END_USAGE;
-usage: $0 -in=<resource directory> -out=<archive file>
+usage: $0 -out=<archive file>
 END_USAGE
 }

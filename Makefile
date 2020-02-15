@@ -1,5 +1,6 @@
 access_log=access.log
 resource_list=resource.list
+resource_index=resource.index
 resource_dir=resource.d
 archive=archive.data
 
@@ -11,14 +12,19 @@ list_resource:
 
 create_dummy:
 	cat $(resource_list) \
-		| perl -s create_dummy.pl -out_dir=$(resource_dir)
+		| perl -s create_dummy.pl -out_dir=$(resource_dir) >$(resource_index)
 
 archive:
-	cat $(resource_list) \
-		| perl -s archive.pl -in=$(resource_dir) -out=$(archive)
+	cat $(resource_index) \
+		| perl -s archive.pl -out=$(archive)
 
 clean:
+	rm $(archive)
+	rm $(resource_index)
 	rm -Rf $(resource_dir)
+
+test_data:
+	perl test.pl
 
 run:
 	cargo run
