@@ -19,3 +19,6 @@ archive:
 
 clean:
 	rm -Rf $(resource_dir)
+
+run:
+	cargo run
