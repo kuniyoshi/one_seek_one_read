@@ -1,13 +1,12 @@
 use std::fmt::Debug;
 use std::fs::File;
-use std::io::{self, BufRead, BufReader, Read};
-use std::path::Path;
+use std::io::{self, BufRead, BufReader, Read, Seek, SeekFrom};
 use sha1::{Sha1, Digest};
 
 #[derive(Debug)]
 struct Record {
     path: String,
-    size: i32,
+    size: usize,
     hash: String,
 }
 
@@ -19,7 +18,7 @@ fn main( ) -> Result<(), io::Error> {
     for result in BufReader::new( File::open( "resource.index" )? ).lines( ) {
         let line = result?;
         let fields: Vec<&str> = line.split( '\t' ).collect( );
-        let size: i32 = fields[1].parse( ).unwrap( );
+        let size: usize = fields[1].parse( ).unwrap( );
         let record = Record {
             path: fields[0].to_string( ),
             size: size,
@@ -42,6 +41,28 @@ fn main( ) -> Result<(), io::Error> {
         let result = hex::encode( hasher.result( ).to_vec( ) );
 
         assert_eq!( result, record.hash );
+    }
+
+    {
+        let mut file = File::open( ARCHIVE )?;
+        let mut offset: usize = 0;
+
+        for record in &records {
+            let mut buffer = vec![ 0; record.size ];
+
+            let seek = SeekFrom::Start( offset as u64 );
+            file.seek( seek ).unwrap( );
+            let length = file.read( &mut buffer ).unwrap( );
+            assert_eq!( length, record.size );
+
+            offset = offset + length;
+
+            let mut hasher = Sha1::new( );
+            hasher.input( &buffer );
+            let hash = hex::encode( hasher.result( ).to_vec( ) );
+
+            assert_eq!( hash, record.hash );
+        }
     }
 
     Ok( () )
