@@ -2,8 +2,12 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read, Seek, SeekFrom, Result};
+use env_logger;
 use sha1::{Sha1, Digest};
 use rand::Rng;
+
+#[macro_use]
+extern crate log;
 
 #[derive( Debug )]
 struct Record {
@@ -64,7 +68,7 @@ impl Archive {
                 size,
             };
 
-            println!( "{:?}", index );
+            debug!( "{:?}", index );
 
             indexes.push( index );
 
@@ -80,18 +84,20 @@ const ARCHIVE: &'static str = "archive.data";
 const INDEX: &'static str = "resource.index";
 
 fn main( ) -> Result<()> {
+    env_logger::init( );
+
     let records = read_records( INDEX )?;
     let mut archive = Archive::new( ARCHIVE, &records )?;
 
     let mut rng = rand::thread_rng( );
 
-    println!( "read some" );
+    debug!( "read some" );
 
     for _ in 1 .. 10 {
         let target = rng.gen_range( 0, records.len( ) );
-        println!( "target: {}", target );
+        debug!( "target: {}", target );
         let record = &records[ target ];
-        println!( "record: {:?}", record );
+        debug!( "record: {:?}", record );
         let data = archive.read( target )?;
         let mut hasher = Sha1::new( );
         hasher.input( data );
@@ -129,7 +135,7 @@ fn read_records(path: &str) -> Result< Vec<Record> > {
             hash,
         };
 
-        println!( "{:?}", record );
+        debug!( "{:?}", record );
 
         records.push( record );
     }
@@ -151,13 +157,13 @@ fn test_reading_by_hash( ) -> Result< () > {
             hash: fields[2].to_string( ),
         };
 
-        println!( "{:?}", record );
+        debug!( "{:?}", record );
 
         records.push( record );
     }
 
     for record in &records {
-        println!( "{:?}", record.path );
+        debug!( "{:?}", record.path );
         let mut file = File::open( &record.path )?;
         let mut data = Vec::new( );
         file.read_to_end( &mut data )?;
