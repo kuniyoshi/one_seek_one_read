@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 use std::fs::File;
-use std::io::{self, BufRead, BufReader, Read, Seek, SeekFrom};
+use std::io::{BufRead, BufReader, Read, Seek, SeekFrom, Result};
 use sha1::{Sha1, Digest};
 
 #[derive( Debug )]
@@ -11,21 +11,21 @@ struct Record {
 }
 
 #[derive( Debug )]
-struct Position {
+struct Index {
     offset: u64,
     size: usize,
 }
 
 #[derive( Debug )]
 struct Archive {
-    indexes: Vec<Position>,
+    indexes: Vec<Index>,
     file: File,
 }
 
 impl Archive {
     pub fn new(archive_path: &str,
-               index_path: &str) -> Result<Self, io::Error> { // use os path instead
-        let indexes = Self::read_indexes( index_path )?;
+               records: &Vec< Record >) -> Result< Self > { // use os path instead
+        let indexes = Self::indexes_from_records( records );
 
         let mut file = File::open( archive_path )?;
 
@@ -37,7 +37,7 @@ impl Archive {
         )
     }
 
-    pub fn read(&mut self, at: usize) -> Result< Vec<u8>, io::Error > {
+    pub fn read(&mut self, at: usize) -> Result< Vec<u8> > {
         let index = &self.indexes[ at ];
         let mut data = vec![ 0; 0_usize ];
 
@@ -49,17 +49,14 @@ impl Archive {
         Ok( data )
     }
 
-    fn read_indexes(path: &str) -> Result<Vec<Position>, io::Error> { // use os path instead
-        let mut indexes = Vec::<Position>::new( );
+    fn indexes_from_records(records: &Vec< Record >) -> Vec<Index> { // use os path instead
+        let mut indexes = vec![ ];
         let mut offset = 0_u64;
 
-        for result in BufReader::new( File::open( path )? ).lines( ) {
-            let line = result?;
-            let fields: Vec<&str> = line.split( '\t' ).collect( );
+        for record in records {
+            let size = record.size;
 
-            let size: usize = fields[1].parse( ).unwrap( );
-
-            let index = Position {
+            let index = Index {
                 offset,
                 size,
             };
@@ -71,7 +68,7 @@ impl Archive {
             offset = offset + size as u64;
         }
 
-        Ok( indexes )
+        indexes
     }
 
 }
@@ -79,13 +76,39 @@ impl Archive {
 const ARCHIVE: &'static str = "archive.data";
 const INDEX: &'static str = "resource.index";
 
-fn main( ) -> Result<(), io::Error> {
-    let archive = Archive::new( ARCHIVE, INDEX )?;
+fn main( ) -> Result<()> {
+    let records = read_records( INDEX )?;
+    let archive = Archive::new( ARCHIVE, &records )?;
 
     Ok( () )
 }
 
-fn some( ) -> Result<(), io::Error> {
+fn read_records(path: &str) -> Result< Vec<Record> > {
+    let mut records = vec![];
+
+    for result in BufReader::new( File::open( path )? ).lines( ) {
+        let line = result?;
+        let fields: Vec<&str> = line.split( '\t' ).collect( );
+
+        let path = fields[0].to_string( );
+        let size: usize = fields[1].parse( ).unwrap( );
+        let hash = fields[2].to_string( );
+
+        let record = Record {
+            path,
+            size,
+            hash,
+        };
+
+        println!( "{:?}", record );
+
+        records.push( record );
+    }
+
+    Ok( records )
+}
+
+fn some( ) -> Result< () > {
     let mut records: Vec<Record> = vec![ ];
 
     for result in BufReader::new( File::open( "resource.index" )? ).lines( ) {
