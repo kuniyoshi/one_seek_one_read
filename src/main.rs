@@ -1,7 +1,9 @@
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read, Seek, SeekFrom, Result};
 use sha1::{Sha1, Digest};
+use rand::Rng;
 
 #[derive( Debug )]
 struct Record {
@@ -39,12 +41,13 @@ impl Archive {
 
     pub fn read(&mut self, at: usize) -> Result< Vec<u8> > {
         let index = &self.indexes[ at ];
-        let mut data = vec![ 0; 0_usize ];
+        let mut data = vec![ 0; index.size ];
 
         let seek = SeekFrom::Start( index.offset );
         self.file.seek( seek )?;
 
         self.file.read( &mut data )?;
+        assert!( data.len( ) > 0 );
 
         Ok( data )
     }
@@ -78,9 +81,35 @@ const INDEX: &'static str = "resource.index";
 
 fn main( ) -> Result<()> {
     let records = read_records( INDEX )?;
-    let archive = Archive::new( ARCHIVE, &records )?;
+    let mut archive = Archive::new( ARCHIVE, &records )?;
+
+    let mut rng = rand::thread_rng( );
+
+    println!( "read some" );
+
+    for _ in 1 .. 10 {
+        let target = rng.gen_range( 0, records.len( ) );
+        println!( "target: {}", target );
+        let record = &records[ target ];
+        println!( "record: {:?}", record );
+        let data = archive.read( target )?;
+        let mut hasher = Sha1::new( );
+        hasher.input( data );
+        let hash = hex::encode( hasher.result( ) );
+        assert_eq!( hash, record.hash );
+    }
 
     Ok( () )
+}
+
+fn create_mapping(records: &Vec<Record>) -> HashMap< String, usize > {
+    let mut map = HashMap::new( );
+
+    for ( index, record ) in records.iter( ).enumerate( ) {
+        map.insert( record.path.to_string( ), index );
+    }
+
+    map
 }
 
 fn read_records(path: &str) -> Result< Vec<Record> > {
@@ -108,7 +137,8 @@ fn read_records(path: &str) -> Result< Vec<Record> > {
     Ok( records )
 }
 
-fn some( ) -> Result< () > {
+#[test]
+fn test_reading_by_hash( ) -> Result< () > {
     let mut records: Vec<Record> = vec![ ];
 
     for result in BufReader::new( File::open( "resource.index" )? ).lines( ) {
