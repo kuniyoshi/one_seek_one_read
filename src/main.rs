@@ -3,16 +3,89 @@ use std::fs::File;
 use std::io::{self, BufRead, BufReader, Read, Seek, SeekFrom};
 use sha1::{Sha1, Digest};
 
-#[derive(Debug)]
+#[derive( Debug )]
 struct Record {
     path: String,
     size: usize,
     hash: String,
 }
 
+#[derive( Debug )]
+struct Position {
+    offset: u64,
+    size: usize,
+}
+
+#[derive( Debug )]
+struct Archive {
+    indexes: Vec<Position>,
+    file: File,
+}
+
+impl Archive {
+    pub fn new(archive_path: &str,
+               index_path: &str) -> Result<Self, io::Error> { // use os path instead
+        let indexes = Self::read_indexes( index_path )?;
+
+        let mut file = File::open( archive_path )?;
+
+        Ok(
+            Archive {
+                indexes,
+                file,
+            }
+        )
+    }
+
+    pub fn read(&mut self, at: usize) -> Result< Vec<u8>, io::Error > {
+        let index = &self.indexes[ at ];
+        let mut data = vec![ 0; 0_usize ];
+
+        let seek = SeekFrom::Start( index.offset );
+        self.file.seek( seek )?;
+
+        self.file.read( &mut data )?;
+
+        Ok( data )
+    }
+
+    fn read_indexes(path: &str) -> Result<Vec<Position>, io::Error> { // use os path instead
+        let mut indexes = Vec::<Position>::new( );
+        let mut offset = 0_u64;
+
+        for result in BufReader::new( File::open( path )? ).lines( ) {
+            let line = result?;
+            let fields: Vec<&str> = line.split( '\t' ).collect( );
+
+            let size: usize = fields[1].parse( ).unwrap( );
+
+            let index = Position {
+                offset,
+                size,
+            };
+
+            println!( "{:?}", index );
+
+            indexes.push( index );
+
+            offset = offset + size as u64;
+        }
+
+        Ok( indexes )
+    }
+
+}
+
 const ARCHIVE: &'static str = "archive.data";
+const INDEX: &'static str = "resource.index";
 
 fn main( ) -> Result<(), io::Error> {
+    let archive = Archive::new( ARCHIVE, INDEX )?;
+
+    Ok( () )
+}
+
+fn some( ) -> Result<(), io::Error> {
     let mut records: Vec<Record> = vec![ ];
 
     for result in BufReader::new( File::open( "resource.index" )? ).lines( ) {
@@ -67,3 +140,4 @@ fn main( ) -> Result<(), io::Error> {
 
     Ok( () )
 }
+
