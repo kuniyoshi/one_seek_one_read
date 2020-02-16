@@ -27,7 +27,8 @@ test_data:
 	perl test.pl
 
 run:
-	cargo run
+	cargo build
+	cargo run --bin archive --verbose
 
 release:
 	cargo build --release
