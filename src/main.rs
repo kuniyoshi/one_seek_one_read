@@ -2,6 +2,7 @@ use std::fmt::Debug;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Read};
 use std::path::Path;
+use sha1::{Sha1, Digest};
 
 #[derive(Debug)]
 struct Record {
@@ -13,12 +14,12 @@ struct Record {
 const ARCHIVE: &'static str = "archive.data";
 
 fn main( ) -> Result<(), io::Error> {
-    let mut records: Vec<Record> = vec![];
+    let mut records: Vec<Record> = vec![ ];
 
     for result in BufReader::new( File::open( "resource.index" )? ).lines( ) {
         let line = result?;
         let fields: Vec<&str> = line.split( '\t' ).collect( );
-        let size: i32 = fields[1].parse( ).unwrap();
+        let size: i32 = fields[1].parse( ).unwrap( );
         let record = Record {
             path: fields[0].to_string( ),
             size: size,
@@ -33,8 +34,14 @@ fn main( ) -> Result<(), io::Error> {
     for record in &records {
         println!( "{:?}", record.path );
         let mut file = File::open( &record.path )?;
-        let mut data = Vec::new();
+        let mut data = Vec::new( );
         file.read_to_end( &mut data )?;
+
+        let mut hasher = Sha1::new( );
+        hasher.input( &data );
+        let result = hex::encode( hasher.result( ).to_vec( ) );
+
+        assert_eq!( result, record.hash );
     }
 
     Ok( () )
