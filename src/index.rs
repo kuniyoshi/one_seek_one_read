@@ -42,8 +42,6 @@ pub fn read_records( path: &str ) -> Result< Vec<Record> > {
             hash,
         };
 
-        debug!( "{:?}", record );
-
         records.push( record );
     }
 
