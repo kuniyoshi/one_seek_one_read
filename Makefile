@@ -1,3 +1,6 @@
+MODE=archive
+COUNT=100
+
 access_log=access.log
 resource_list=resource.list
 resource_index=resource.index
@@ -28,7 +31,7 @@ test_data:
 
 run:
 	cargo build
-	RUST_LOG=$(RUST_LOG) cargo run --bin main --verbose
+	RUST_LOG=$(RUST_LOG) cargo run --bin main --verbose -- $(MODE) $(COUNT)
 
 release:
 	cargo build --release
