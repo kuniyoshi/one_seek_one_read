@@ -6,7 +6,7 @@ pub const INDEX_PATH: &'static str = "resource.index";
 
 pub fn get_hash( data: &Vec<u8> ) -> String {
     let mut hasher = Sha1::new( );
-    hasher.input( &data );
+    hasher.input( data );
     let hash = hex::encode( hasher.result( ).to_vec( ) );
 
     hash

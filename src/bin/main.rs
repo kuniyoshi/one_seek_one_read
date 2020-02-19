@@ -1,6 +1,5 @@
 use std::io::Result;
 use env_logger;
-use sha1::{Sha1, Digest};
 use rand::Rng;
 
 #[macro_use]
@@ -10,11 +9,12 @@ extern crate one_seek_one_read;
 
 use one_seek_one_read::archive::Archive;
 use one_seek_one_read::index;
+use one_seek_one_read::util;
 
 const ARCHIVE: &'static str = "archive.data";
 const INDEX: &'static str = "resource.index";
 
-fn main( ) -> Result<()> {
+fn main( ) -> Result< () > {
     env_logger::init( );
 
     let records = index::read_records( INDEX )?;
@@ -30,12 +30,9 @@ fn main( ) -> Result<()> {
         let record = &records[ target ];
         debug!( "record: {:?}", record );
         let data = archive.read( target )?;
-        let mut hasher = Sha1::new( );
-        hasher.input( data );
-        let hash = hex::encode( hasher.result( ) );
-        assert_eq!( hash, record.hash );
+
+        assert_eq!( util::get_hash( &data ), record.hash );
     }
 
     Ok( () )
 }
-
