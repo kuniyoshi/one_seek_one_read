@@ -28,7 +28,7 @@ test_data:
 
 run:
 	cargo build
-	cargo run --bin archive --verbose
+	RUST_LOG=$(RUST_LOG) cargo run --bin archive --verbose
 
 release:
 	cargo build --release

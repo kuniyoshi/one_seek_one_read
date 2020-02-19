@@ -1,7 +1,6 @@
 use std::collections::HashMap;
-use std::fmt::Debug;
 use std::fs::File;
-use std::io::{BufRead, BufReader, Read, Seek, SeekFrom, Result};
+use std::io::{BufRead, BufReader, Result};
 use env_logger;
 use sha1::{Sha1, Digest};
 use rand::Rng;
@@ -11,7 +10,8 @@ extern crate log;
 
 extern crate one_seek_one_read;
 
-use one_seek_one_read::{Archive, Record};
+use one_seek_one_read::archive::Archive;
+use one_seek_one_read::index::Record;
 
 const ARCHIVE: &'static str = "archive.data";
 const INDEX: &'static str = "resource.index";
