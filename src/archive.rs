@@ -31,7 +31,7 @@ impl Archive {
         self.file.seek( seek )?;
 
         self.file.read( &mut data )?;
-        assert!( data.len( ) > 0 );
+        debug_assert!( data.len( ) > 0 );
 
         Ok( data )
     }
@@ -71,7 +71,7 @@ fn test_reading_by_hash( ) -> Result< () > {
     for ( index, record ) in records.iter( ).enumerate( ) {
         let data = archive.read( index )?;
 
-        assert_eq!( util::get_hash( &data ), record.hash );
+        debug_assert_eq!( util::get_hash( &data ), record.hash );
     }
 
     Ok( () )

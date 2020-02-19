@@ -42,7 +42,7 @@ fn test_reading_by_hash( ) -> Result< () > {
     for ( index, record ) in records.iter( ).enumerate( ) {
         let data = normal.read( index )?;
 
-        assert_eq!( util::get_hash( &data ), record.hash );
+        debug_assert_eq!( util::get_hash( &data ), record.hash );
     }
 
     Ok( () )
