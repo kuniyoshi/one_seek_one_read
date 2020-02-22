@@ -60,7 +60,7 @@ fn run_normal( count: u64 ) -> Result< () > {
         debug!( "record: {:?}", record );
         let data = normal.read( target )?;
 
-        assert_eq!( util::get_hash( &data ), record.hash );
+        debug_assert_eq!( util::get_hash( &data ), record.hash );
     }
 
     Ok( () )
@@ -78,14 +78,14 @@ fn run_archive( count: u64 ) -> Result< () > {
         debug!( "record: {:?}", record );
         let data = archive.read( target )?;
 
-        assert_eq!( util::get_hash( &data ), record.hash );
+        debug_assert_eq!( util::get_hash( &data ), record.hash );
     }
 
     Ok( () )
 }
 
 fn get_args( args: &Vec<String> ) -> ( Mode, u64 ) {
-    assert!( args.len( ) > 0 );
+    debug_assert!( args.len( ) > 0 );
     let me = &args[0];
     let message = format!( "usage: {} <{} | {}> <iteration count>", me, Mode::Archive, Mode::Normal );
 

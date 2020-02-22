@@ -71,7 +71,7 @@ mod tests {
                     debug!( "record: {:?}", record );
                     let data = archive.read( target )?;
 
-                    assert_eq!( util::get_hash( &data ), record.hash );
+                    debug_assert_eq!( util::get_hash( &data ), record.hash );
 
                     Ok( () )
                 } );
