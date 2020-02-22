@@ -50,7 +50,7 @@ fn main( ) -> Result< () > {
 
 fn run_normal( count: u64 ) -> Result< () > {
     let records = index::read_records( INDEX )?;
-    let normal = Normal::new( &records );
+    let normal = Normal::new( &records, true );
     let mut rng = rand::thread_rng( );
 
     for _ in 0 .. count {

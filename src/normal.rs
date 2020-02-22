@@ -4,18 +4,24 @@ use crate::index::Record;
 
 pub struct Normal {
     paths: Vec< String >,
+    sizes: Vec< usize >,
+    enable_one_read: bool,
 }
 
 impl Normal {
-    pub fn new( records: &Vec< Record > ) -> Self {
+    pub fn new( records: &Vec< Record >, enable_one_read: bool ) -> Self {
         let mut paths = vec![ ];
+        let mut sizes = vec![ ];
 
         for record in records {
             paths.push( record.path.to_string( ) );
+            sizes.push( record.size );
         }
 
         Normal {
             paths,
+            sizes,
+            enable_one_read,
         }
     }
 
@@ -23,9 +29,17 @@ impl Normal {
         let path = &self.paths[ at ];
 
         let mut file = File::open( path )?;
-        let mut data = vec![ ];
+        let mut data;
 
-        file.read_to_end( &mut data )?;
+        if self.enable_one_read {
+            let size = self.sizes[ at ];
+            data = Vec::<u8>::with_capacity( size );
+            file.read( &mut data )?;
+        }
+        else {
+            data = vec![ ];
+            file.read_to_end( &mut data )?;
+        }
 
         Ok( data )
     }
@@ -37,10 +51,18 @@ fn test_reading_by_hash( ) -> Result< () > {
     use crate::index;
 
     let records = index::read_records( util::INDEX_PATH )?;
-    let normal = Normal::new( &records );
+    let normal = Normal::new( &records, false );
 
     for ( index, record ) in records.iter( ).enumerate( ) {
         let data = normal.read( index )?;
+
+        debug_assert_eq!( util::get_hash( &data ), record.hash );
+    }
+
+    let one_read = Normal::new( &records, true );
+
+    for ( index, record ) in records.iter( ).enumerate( ) {
+        let data = one_read.read( index )?;
 
         debug_assert_eq!( util::get_hash( &data ), record.hash );
     }

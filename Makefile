@@ -40,7 +40,7 @@ test:
 	cargo test
 
 bench:
-	cargo bench 
+	cargo bench
 
 sam:
 	cargo run --bin sam

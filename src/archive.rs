@@ -25,7 +25,7 @@ impl Archive {
 
     pub fn read( &mut self, at: usize ) -> Result< Vec<u8> > {
         let index = &self.indexes[ at ];
-        let mut data = vec![ 0; index.size ];
+        let mut data = Vec::<u8>::with_capacity( index.size );
 
         let seek = SeekFrom::Start( index.offset );
         self.file.seek( seek )?;
