@@ -6,6 +6,7 @@ extern crate one_seek_one_read;
 use std::env;
 use std::fmt;
 use std::io::Result;
+use std::io::Write;
 use std::str::FromStr;
 use env_logger;
 use rand::Rng;
@@ -86,21 +87,26 @@ fn run_archive( count: u64 ) -> Result< () > {
 fn get_args( args: &Vec<String> ) -> ( Mode, u64 ) {
     assert!( args.len( ) > 0 );
     let me = &args[0];
-    let usage = format!( "usage: {} <{} | {}> <iteration count>", me, Mode::Archive, Mode::Normal );
+    let message = format!( "usage: {} <{} | {}> <iteration count>", me, Mode::Archive, Mode::Normal );
 
     if args.len( ) != 3 {
-        panic!( usage );
+        usage( &message );
     }
 
     let mode = match &args[1][..] {
-        "archive"   => Mode::Archive,
-        "normal"    => Mode::Normal,
-        _           => panic!( usage ),
-    };
+        "archive"   => Some( Mode::Archive ),
+        "normal"    => Some( Mode::Normal ),
+        _           => { usage( &message ); None },
+    }.unwrap( );
     let count = match u64::from_str( &args[2][..] ) {
-        Ok( value ) => value,
-        _           => panic!( usage ),
-    };
+        Ok( value ) => Some( value ),
+        _           => { usage( &message ); None },
+    }.unwrap( );
 
     ( mode, count )
+}
+
+fn usage( message: &String ) {
+    writeln!( std::io::stderr( ), "{}", message ).unwrap( );
+    std::process::abort( );
 }

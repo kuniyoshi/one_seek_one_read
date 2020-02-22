@@ -38,3 +38,9 @@ release:
 
 test:
 	cargo test
+
+bench:
+	cargo bench 
+
+sam:
+	cargo run --bin sam
