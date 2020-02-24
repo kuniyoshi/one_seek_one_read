@@ -102,7 +102,7 @@ fn run_normal_random( b: &mut Bencher ) -> Result<()> {
     Ok( () )
 }
 
-fn get_random_iterator( max_index: usize ) -> impl Iterator< Item=usize > + 'static {
+fn get_random_iterator( max_index: usize ) -> impl Iterator< Item=usize > {
     let seed = [
         9, 167, 249, 169, 8,
         33, 178, 6, 107, 190,
