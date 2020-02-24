@@ -41,4 +41,4 @@ test:
 	cargo test
 
 bench:
-	cargo bench
+	cargo bench --tests

@@ -39,6 +39,19 @@ environment:
 - memory: 16 GB 1867 MHz LPDDR3
 - storage: SSD
 
+# BENCHMARK RESULT
+
+```
+test run_archive                  ... bench:      40,125 ns/iter (+/- 9,913)
+test run_archive_optimized        ... bench:      32,628 ns/iter (+/- 6,122)
+test run_archive_random           ... bench:      37,047 ns/iter (+/- 15,038)
+test run_archive_random_optimized ... bench:      37,093 ns/iter (+/- 13,616)
+test run_normal                   ... bench:      95,192 ns/iter (+/- 205,450)
+test run_normal_random            ... bench:     109,730 ns/iter (+/- 58,630)
+test run_one_read                 ... bench:      45,580 ns/iter (+/- 9,547)
+test run_one_read_random          ... bench:      49,761 ns/iter (+/- 20,058)
+```
+
 # REFERENCES
 
 - [SCHOOL GIRL STRIKERS's Engine](https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=2&cad=rja&uact=8&ved=2ahUKEwipsKms9-nnAhUU_GEKHUAWBiEQFjABegQIAhAB&url=http%3A%2F%2Fwww.jp.square-enix.com%2Fconference%2F2014%2Ftechnical_seminar%2Fimg%2Fpdf%2FSQEX_DevCon_sugimoto.pdf&usg=AOvVaw33gWJoLD9Ww_4NWlg5di38)
