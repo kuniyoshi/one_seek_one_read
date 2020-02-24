@@ -80,7 +80,7 @@ fn test_reading_by_hash( ) -> Result< () > {
     use crate::index;
 
     let records = index::read_records( util::INDEX_PATH )?;
-    let mut archive = Archive::new( util::ARCHIVE_PATH, &records )?;
+    let mut archive = Archive::new( util::ARCHIVE_PATH, &records, true )?;
 
     for ( index, record ) in records.iter( ).enumerate( ) {
         let data = archive.read( index )?;

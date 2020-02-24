@@ -19,9 +19,6 @@ use one_seek_one_read::normal::Normal;
 use one_seek_one_read::index;
 use one_seek_one_read::util;
 
-const ARCHIVE: &'static str = "archive.data";
-const INDEX: &'static str = "resource.index";
-
 #[derive( Debug )]
 enum Mode {
     Archive,
@@ -62,7 +59,7 @@ fn main( ) -> Result< () > {
     debug!( "iteration_type: {}", iteration_type );
     debug!( "optimization: {}", optimization );
 
-    let records = index::read_records( INDEX )?;
+    let records = index::read_records( util::INDEX_PATH )?;
 
     let iter = get_iterator( records.len( ), iteration_count as usize, iteration_type );
 
@@ -96,7 +93,7 @@ fn run_archive<I>( records: &Vec<index::Record>,
                    optimization: bool ) -> Result< () >
     where I: IntoIterator<Item=usize>
 {
-    let mut archive = Archive::new( ARCHIVE, &records, optimization )?;
+    let mut archive = Archive::new( util::ARCHIVE_PATH, &records, optimization )?;
 
     for target in iter {
         debug!( "target: {}", target );

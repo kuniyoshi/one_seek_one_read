@@ -11,8 +11,8 @@ use Digest::SHA1 qw( sha1_hex );
 use Path::Class qw( file );
 use Fcntl qw( O_RDONLY );
 
-Readonly my $ARCHIVE_FILENAME   => "archive.data";
-Readonly my $INDEX_FILENAME     => "resource.index";
+Readonly my $ARCHIVE_FILENAME   => "data/archive.data";
+Readonly my $INDEX_FILENAME     => "data/resource.index";
 
 my $file = file( $INDEX_FILENAME );
 my @lines = $file->slurp( chomp => 1 );

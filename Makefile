@@ -1,36 +1,38 @@
 MODE=archive
 COUNT=100
+SEQ_TYPE=random
+OPTIMIZATION=true
 
-access_log=access.log
-resource_list=resource.list
-resource_index=resource.index
-resource_dir=resource.d
-archive=archive.data
+data_dir=data
+access_log=$(data_dir)/access.log
+resource_list=$(data_dir)/resource.list
+resource_index=$(data_dir)/resource.index
+resource_dir=$(data_dir)/resource.d
+archive=$(data_dir)/archive.data
 
 list_resource:
 	cat $(access_log) \
-		| perl step1.extract.pl \
-		| perl step2.clean_up_path.pl \
-		| perl list_resource.pl >$(resource_list)
+		| scripts/step1.extract.pl \
+		| scripts/step2.clean_up_path.pl \
+		| scripts/list_resource.pl >$(resource_list)
 
 create_dummy:
 	cat $(resource_list) \
-		| perl -s create_dummy.pl -out_dir=$(resource_dir) >$(resource_index)
+		| scripts/create_dummy.pl -out_dir=$(resource_dir) >$(resource_index)
 
 archive:
 	cat $(resource_index) \
-		| perl -s archive.pl -out=$(archive)
+		| scripts/archive.pl -out=$(archive)
 
 clean:
-	rm $(archive)
-	rm $(resource_index)
 	rm -Rf $(resource_dir)
+	cargo clean
 
 test_data:
-	perl test.pl
+	scripts/test.pl
 
 run:
-	RUST_LOG=$(RUST_LOG) cargo run --bin main --verbose -- $(MODE) $(COUNT) $(SEQ_TYPE)
+	RUST_LOG=$(RUST_LOG) cargo run --bin main --verbose -- $(MODE) $(COUNT) $(SEQ_TYPE) $(OPTIMIZATION)
 
 release:
 	cargo build --release

@@ -3,8 +3,8 @@ use hex;
 use rand::{ Rng, SeedableRng, rngs::StdRng };
 use sha1::{ Sha1, Digest };
 
-pub const ARCHIVE_PATH: &'static str = "archive.data";
-pub const INDEX_PATH: &'static str = "resource.index";
+pub const ARCHIVE_PATH: &'static str = "data/archive.data";
+pub const INDEX_PATH: &'static str = "data/resource.index";
 
 pub fn get_hash( data: &Vec< u8 > ) -> String {
     let mut hasher = Sha1::new( );

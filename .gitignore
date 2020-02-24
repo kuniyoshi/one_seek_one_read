@@ -1,7 +1,4 @@
 /target
 **/*.rs.bk
 
-access.log
-resource.list
-resource.d
-archive.data
+data/*
