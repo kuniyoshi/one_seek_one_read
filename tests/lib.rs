@@ -99,3 +99,44 @@ fn run_normal_random( b: &mut Bencher ) -> Result<()> {
 
     Ok( () )
 }
+#[bench]
+fn run_one_read( b: &mut Bencher ) -> Result<()> {
+    let records = index::read_records( INDEX )?;
+    let normal = Normal::new( &records, true );
+
+    let mut iter = util::get_sequential_iterator( records.len( ) );
+
+    b.iter( | | -> Result<()>
+            {
+                let target = iter.next( ).unwrap( );
+                let record = &records[ target ];
+                let data = normal.read( target )?;
+
+                debug_assert_eq!( util::get_hash( &data ), record.hash );
+
+                Ok( () )
+            } );
+
+    Ok( () )
+}
+
+#[bench]
+fn run_one_read_random( b: &mut Bencher ) -> Result<()> {
+    let records = index::read_records( INDEX )?;
+    let normal = Normal::new( &records, true );
+
+    let mut iter = util::get_random_iterator( records.len( ) );
+
+    b.iter( | | -> Result<()>
+            {
+                let target = iter.next( ).unwrap( );
+                let record = &records[ target ];
+                let data = normal.read( target )?;
+
+                debug_assert_eq!( util::get_hash( &data ), record.hash );
+
+                Ok( () )
+            } );
+
+    Ok( () )
+}
