@@ -6,6 +6,7 @@ use crate::index::{ Index, Record };
 pub struct Archive {
     indexes: Vec<Index>,
     file: File,
+    last_index: usize,
 }
 
 impl Archive {
@@ -19,19 +20,29 @@ impl Archive {
             Archive {
                 indexes,
                 file,
+                last_index: 0,
             }
         )
     }
 
     pub fn read( &mut self, at: usize ) -> Result< Vec<u8> > {
         let index = &self.indexes[ at ];
-        let mut data = Vec::<u8>::with_capacity( index.size );
+        let mut data;
 
-        let seek = SeekFrom::Start( index.offset );
-        self.file.seek( seek )?;
+        unsafe {
+            data = Vec::<u8>::with_capacity( index.size );
+            data.set_len( index.size );
+        }
+
+        if at != self.last_index + 1 {
+            let seek = SeekFrom::Start( index.offset );
+            self.file.seek( seek )?;
+        }
 
         self.file.read( &mut data )?;
         debug_assert!( data.len( ) > 0 );
+
+        self.last_index = at;
 
         Ok( data )
     }

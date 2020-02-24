@@ -42,19 +42,26 @@ fn main( ) -> Result< () > {
     debug!( "which: {}", which );
     debug!( "iteration_count: {}", iteration_count );
 
+    let records = index::read_records( INDEX )?;
+
+    let mut rng = rand::thread_rng( );
+//    let iter = ( 0 .. iteration_count )
+//        .map( | _ | rng.gen_range( 0, records.len( ) ) );
+
+    let iter = ( 0 .. records.len( ) ).cycle( ).take( iteration_count as usize );
+
     match which {
-        Mode::Archive   => run_archive( iteration_count ),
-        Mode::Normal    => run_normal( iteration_count ),
+        Mode::Archive   => run_archive( &records, iter ),
+        Mode::Normal    => run_normal( &records, iter ),
     }
 }
 
-fn run_normal( count: u64 ) -> Result< () > {
-    let records = index::read_records( INDEX )?;
+fn run_normal<I>( records: &Vec<index::Record>, iter: I ) -> Result< () >
+    where I: IntoIterator<Item=usize>
+{
     let normal = Normal::new( &records, true );
-    let mut rng = rand::thread_rng( );
 
-    for _ in 0 .. count {
-        let target = rng.gen_range( 0, records.len( ) );
+    for target in iter {
         debug!( "target: {}", target );
         let record = &records[ target ];
         debug!( "record: {:?}", record );
@@ -66,13 +73,12 @@ fn run_normal( count: u64 ) -> Result< () > {
     Ok( () )
 }
 
-fn run_archive( count: u64 ) -> Result< () > {
-    let records = index::read_records( INDEX )?;
+fn run_archive<I>( records: &Vec<index::Record>, iter: I ) -> Result< () >
+    where I: IntoIterator<Item=usize>
+{
     let mut archive = Archive::new( ARCHIVE, &records )?;
-    let mut rng = rand::thread_rng( );
 
-    for _ in 0 .. count {
-        let target = rng.gen_range( 0, records.len( ) );
+    for target in iter {
         debug!( "target: {}", target );
         let record = &records[ target ];
         debug!( "record: {:?}", record );

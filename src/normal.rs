@@ -33,7 +33,10 @@ impl Normal {
 
         if self.enable_one_read {
             let size = self.sizes[ at ];
-            data = Vec::<u8>::with_capacity( size );
+            unsafe {
+                data = Vec::<u8>::with_capacity( size );
+                data.set_len( size );
+            }
             file.read( &mut data )?;
         }
         else {
