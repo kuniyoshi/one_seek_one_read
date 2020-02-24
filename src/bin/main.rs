@@ -1,15 +1,18 @@
 #[macro_use]
 extern crate log;
 
+#[macro_use]
+extern crate auto_enums;
+
 extern crate one_seek_one_read;
 
 use std::env;
+use std::collections::VecDeque;
 use std::fmt;
 use std::io::Result;
 use std::io::Write;
 use std::str::FromStr;
 use env_logger;
-use rand::Rng;
 
 use one_seek_one_read::archive::Archive;
 use one_seek_one_read::normal::Normal;
@@ -25,6 +28,12 @@ enum Mode {
     Normal,
 }
 
+#[derive( Debug )]
+enum IterationType {
+    Sequential,
+    Random,
+}
+
 impl fmt::Display for Mode {
     fn fmt( &self, format: &mut fmt::Formatter ) -> fmt::Result {
         match *self {
@@ -34,21 +43,27 @@ impl fmt::Display for Mode {
     }
 }
 
+impl fmt::Display for IterationType {
+    fn fmt( &self, format: &mut fmt::Formatter ) -> fmt::Result {
+        match *self {
+            IterationType::Sequential   => write!( format, "sequential" ),
+            IterationType::Random       => write!( format, "random" ),
+        }
+    }
+}
+
 fn main( ) -> Result< () > {
     env_logger::init( );
 
-    let ( which, iteration_count ) = get_args( &( env::args( ).collect( ) ) );
+    let ( which, iteration_count, iteration_type ) = parse_args( env::args( ).collect( ) );
 
     debug!( "which: {}", which );
     debug!( "iteration_count: {}", iteration_count );
+    debug!( "iteration_type: {}", iteration_type );
 
     let records = index::read_records( INDEX )?;
 
-    let mut rng = rand::thread_rng( );
-//    let iter = ( 0 .. iteration_count )
-//        .map( | _ | rng.gen_range( 0, records.len( ) ) );
-
-    let iter = ( 0 .. records.len( ) ).cycle( ).take( iteration_count as usize );
+    let iter = get_iterator( records.len( ), iteration_count as usize, iteration_type );
 
     match which {
         Mode::Archive   => run_archive( &records, iter ),
@@ -90,26 +105,52 @@ fn run_archive<I>( records: &Vec<index::Record>, iter: I ) -> Result< () >
     Ok( () )
 }
 
-fn get_args( args: &Vec<String> ) -> ( Mode, u64 ) {
-    debug_assert!( args.len( ) > 0 );
-    let me = &args[0];
-    let message = format!( "usage: {} <{} | {}> <iteration count>", me, Mode::Archive, Mode::Normal );
+#[ auto_enum( Iterator ) ]
+fn get_iterator( max_index: usize,
+                 iteration_count: usize,
+                 iteration_type: IterationType ) -> impl Iterator< Item = usize > {
+    match iteration_type {
+        IterationType::Sequential   => util::get_sequential_iterator( max_index ).take( iteration_count ),
+        IterationType::Random       => util::get_random_iterator( max_index ).take( iteration_count ),
+    }
+}
 
-    if args.len( ) != 3 {
+fn parse_args( mut args: VecDeque<String> ) -> ( Mode, u64, IterationType ) {
+    debug_assert!( args.len( ) > 0 );
+    let me = args.pop_front( ).unwrap( );
+    let message = format!( "usage: {} <reader mode> <iteration count> [iteration type]\n\
+                            \treader mode: {}, {}\n\
+                            \titeration type: {}, {}",
+                           me,
+                           Mode::Archive,
+                           Mode::Normal,
+                           IterationType::Sequential,
+                           IterationType::Random);
+
+    if args.len( ) < 2 {
         usage( &message );
     }
 
-    let mode = match &args[1][..] {
+    let mode = match &args.pop_front( ).unwrap( )[..] {
         "archive"   => Some( Mode::Archive ),
         "normal"    => Some( Mode::Normal ),
         _           => { usage( &message ); None },
     }.unwrap( );
-    let count = match u64::from_str( &args[2][..] ) {
+    let count = match u64::from_str( &args.pop_front( ).unwrap( ) ) {
         Ok( value ) => Some( value ),
         _           => { usage( &message ); None },
     }.unwrap( );
 
-    ( mode, count )
+    let iteration_type = match args.len( ) > 0 {
+        true    => match &( args.pop_front( ).unwrap( ) )[..] {
+            "sequential"    => IterationType::Sequential,
+            "random"        => IterationType::Random,
+            _               => IterationType::Random,
+        },
+        false   => IterationType::Random,
+    };
+
+    ( mode, count, iteration_type )
 }
 
 fn usage( message: &String ) {

@@ -8,8 +8,6 @@ use std::io::Result;
 
 use test::Bencher;
 
-use rand::{Rng, SeedableRng, rngs::StdRng};
-
 use one_seek_one_read::archive::Archive;
 use one_seek_one_read::normal::Normal;
 use one_seek_one_read::index;
@@ -23,7 +21,7 @@ fn run_archive( b: &mut Bencher ) -> Result< () > {
     let records = index::read_records( INDEX )?;
     let mut archive = Archive::new( ARCHIVE, &records )?;
 
-    let mut iter = get_sequential_iterator( records.len( ) );
+    let mut iter = util::get_sequential_iterator( records.len( ) );
 
     b.iter( | | -> Result< () >
             {
@@ -44,7 +42,7 @@ fn run_archive_random( b: &mut Bencher ) -> Result< () > {
     let records = index::read_records( INDEX )?;
     let mut archive = Archive::new( ARCHIVE, &records )?;
 
-    let mut iter = get_random_iterator( records.len( ) );
+    let mut iter = util::get_random_iterator( records.len( ) );
 
     b.iter( | | -> Result< () >
             {
@@ -65,7 +63,7 @@ fn run_normal( b: &mut Bencher ) -> Result<()> {
     let records = index::read_records( INDEX )?;
     let normal = Normal::new( &records, false );
 
-    let mut iter = get_sequential_iterator( records.len( ) );
+    let mut iter = util::get_sequential_iterator( records.len( ) );
 
     b.iter( | | -> Result<()>
             {
@@ -86,7 +84,7 @@ fn run_normal_random( b: &mut Bencher ) -> Result<()> {
     let records = index::read_records( INDEX )?;
     let normal = Normal::new( &records, false );
 
-    let mut iter = get_random_iterator( records.len( ) );
+    let mut iter = util::get_random_iterator( records.len( ) );
 
     b.iter( | | -> Result<()>
             {
@@ -100,25 +98,4 @@ fn run_normal_random( b: &mut Bencher ) -> Result<()> {
             } );
 
     Ok( () )
-}
-
-fn get_random_iterator( max_index: usize ) -> impl Iterator< Item=usize > {
-    let seed = [
-        9, 167, 249, 169, 8,
-        33, 178, 6, 107, 190,
-        90, 75, 229, 24, 59,
-        168, 153, 217, 43, 190,
-        139, 182, 222, 137, 75,
-        45, 239, 225, 64, 57,
-        143, 91
-    ];
-    let mut rng: StdRng = SeedableRng::from_seed( seed );
-
-    std::iter::repeat( max_index ).map( move | i | rng.gen_range( 0, i ) )
-}
-
-fn get_sequential_iterator( max_index: usize ) -> impl Iterator< Item=usize > {
-    let iter = ( 0_usize .. max_index ).cycle( );
-
-    iter
 }

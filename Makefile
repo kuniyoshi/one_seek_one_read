@@ -30,8 +30,7 @@ test_data:
 	perl test.pl
 
 run:
-	cargo build
-	RUST_LOG=$(RUST_LOG) cargo run --bin main --verbose -- $(MODE) $(COUNT)
+	RUST_LOG=$(RUST_LOG) cargo run --bin main --verbose -- $(MODE) $(COUNT) $(SEQ_TYPE)
 
 release:
 	cargo build --release

@@ -7,8 +7,9 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sha-1 = "0.8.2"
-hex = "0.4.1"
-rand = "0.7.3"
-log = "0.4.8"
+auto_enums = "0.7.1"
 env_logger = "0.7.1"
+hex = "0.4.1"
+log = "0.4.8"
+rand = "0.7.3"
+sha-1 = "0.8.2"
