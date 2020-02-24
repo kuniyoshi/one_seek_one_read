@@ -42,6 +42,3 @@ test:
 
 bench:
 	cargo bench
-
-sam:
-	cargo run --bin sam
