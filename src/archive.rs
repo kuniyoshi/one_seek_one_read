@@ -7,11 +7,13 @@ pub struct Archive {
     indexes: Vec<Index>,
     file: File,
     last_index: usize,
+    optimization: bool,
 }
 
 impl Archive {
     pub fn new( archive_path: &str, // use os path instead
-                records: &Vec< Record > ) -> Result< Self > {
+                records: &Vec< Record >,
+                optimization: bool ) -> Result< Self > {
         let indexes = Self::indexes_from_records( records );
 
         let file = File::open( archive_path )?;
@@ -21,6 +23,7 @@ impl Archive {
                 indexes,
                 file,
                 last_index: 0,
+                optimization,
             }
         )
     }
@@ -34,7 +37,7 @@ impl Archive {
             data.set_len( index.size );
         }
 
-        if at != self.last_index + 1 {
+        if !self.optimization || at != self.last_index + 1 {
             let seek = SeekFrom::Start( index.offset );
             self.file.seek( seek )?;
         }

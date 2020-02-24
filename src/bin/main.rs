@@ -55,26 +55,29 @@ impl fmt::Display for IterationType {
 fn main( ) -> Result< () > {
     env_logger::init( );
 
-    let ( which, iteration_count, iteration_type ) = parse_args( env::args( ).collect( ) );
+    let ( which, iteration_count, iteration_type, optimization ) = parse_args( env::args( ).collect( ) );
 
     debug!( "which: {}", which );
     debug!( "iteration_count: {}", iteration_count );
     debug!( "iteration_type: {}", iteration_type );
+    debug!( "optimization: {}", optimization );
 
     let records = index::read_records( INDEX )?;
 
     let iter = get_iterator( records.len( ), iteration_count as usize, iteration_type );
 
     match which {
-        Mode::Archive   => run_archive( &records, iter ),
-        Mode::Normal    => run_normal( &records, iter ),
+        Mode::Archive   => run_archive( &records, iter, optimization ),
+        Mode::Normal    => run_normal( &records, iter, optimization ),
     }
 }
 
-fn run_normal<I>( records: &Vec<index::Record>, iter: I ) -> Result< () >
+fn run_normal<I>( records: &Vec<index::Record>,
+                  iter: I,
+                  optimization: bool ) -> Result< () >
     where I: IntoIterator<Item=usize>
 {
-    let normal = Normal::new( &records, true );
+    let normal = Normal::new( &records, optimization );
 
     for target in iter {
         debug!( "target: {}", target );
@@ -88,10 +91,12 @@ fn run_normal<I>( records: &Vec<index::Record>, iter: I ) -> Result< () >
     Ok( () )
 }
 
-fn run_archive<I>( records: &Vec<index::Record>, iter: I ) -> Result< () >
+fn run_archive<I>( records: &Vec<index::Record>,
+                   iter: I,
+                   optimization: bool ) -> Result< () >
     where I: IntoIterator<Item=usize>
 {
-    let mut archive = Archive::new( ARCHIVE, &records )?;
+    let mut archive = Archive::new( ARCHIVE, &records, optimization )?;
 
     for target in iter {
         debug!( "target: {}", target );
@@ -115,12 +120,13 @@ fn get_iterator( max_index: usize,
     }
 }
 
-fn parse_args( mut args: VecDeque<String> ) -> ( Mode, u64, IterationType ) {
+fn parse_args( mut args: VecDeque<String> ) -> ( Mode, u64, IterationType, bool ) {
     debug_assert!( args.len( ) > 0 );
     let me = args.pop_front( ).unwrap( );
-    let message = format!( "usage: {} <reader mode> <iteration count> [iteration type]\n\
+    let message = format!( "usage: {} <reader mode> <iteration count> [iteration type] [optimize]\n\
                             \treader mode: {}, {}\n\
-                            \titeration type: {}, {}",
+                            \titeration type: {}, {}\n\
+                            \toptimize: true, false",
                            me,
                            Mode::Archive,
                            Mode::Normal,
@@ -150,7 +156,15 @@ fn parse_args( mut args: VecDeque<String> ) -> ( Mode, u64, IterationType ) {
         false   => IterationType::Random,
     };
 
-    ( mode, count, iteration_type )
+    let optimization = match args.len( ) > 0 {
+        true    => match bool::from_str( &args.pop_front( ).unwrap( ) ) {
+            Ok( b )     => b,
+            Err( _ )    => false,
+        },
+        false   => false,
+    };
+
+    ( mode, count, iteration_type, optimization )
 }
 
 fn usage( message: &String ) {
