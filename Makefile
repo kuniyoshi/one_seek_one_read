@@ -38,7 +38,7 @@ release:
 	cargo build --release
 
 test:
-	cargo test
+	cargo test -- --test-threads=1
 
 bench:
-	cargo bench --tests
+	cargo +nightly bench

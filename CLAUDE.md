@@ -7,8 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Building and Testing
 - **Build**: `cargo build`
 - **Build release**: `cargo build --release` or `make release`
-- **Run tests**: `cargo test` or `make test`
-- **Run benchmarks**: `cargo bench --tests` or `make bench`
+- **Run tests**: `make test` (runs tests sequentially to avoid race conditions)
+- **Run benchmarks**: `make bench` (requires nightly Rust)
 - **Run main binary**: `cargo run --bin main -- <mode> <count> <seq_type> <optimization>`
   - Example: `make run MODE=archive COUNT=100 SEQ_TYPE=random OPTIMIZATION=true`
 
