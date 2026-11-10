@@ -1,6 +1,7 @@
 use std::iter;
 use hex;
-use rand::{ Rng, SeedableRng, rngs::StdRng };
+use rand::{ Rng, SeedableRng };
+use rand_chacha::ChaCha20Rng;
 use sha1::{ Sha1, Digest };
 
 pub const ARCHIVE_PATH: &'static str = "data/archive.data";
@@ -24,9 +25,10 @@ pub fn get_random_iterator( max_index: usize ) -> impl Iterator< Item=usize > {
         45, 239, 225, 64, 57,
         143, 91
     ];
-    let mut rng: StdRng = SeedableRng::from_seed( seed );
+    // Keep the ChaCha20 stream used by rand 0.7 for reproducible benchmarks.
+    let mut rng = ChaCha20Rng::from_seed( seed );
 
-    iter::repeat( max_index ).map( move | i | rng.gen_range( 0, i ) )
+    iter::repeat( max_index ).map( move | i | rng.gen_range( 0..i ) )
 }
 
 pub fn get_sequential_iterator( max_index: usize ) -> impl Iterator< Item=usize > {
