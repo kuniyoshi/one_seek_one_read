@@ -1,53 +1,57 @@
-#[cfg(test)]
-pub mod test_utils {
-    use std::fs::{self, File};
-    use std::io::Write;
-    use std::path::Path;
-    use crate::util::get_hash;
+use std::fs;
+use std::io::{self, Write};
+use std::path::PathBuf;
 
-    pub fn setup_test_data() -> std::io::Result<()> {
-        fs::create_dir_all("data")?;
-        fs::create_dir_all("data/resource.d")?;
+use crate::util::get_hash;
 
-        let test_files = vec![
-            ("data/resource.d/file1.txt", b"Hello, World!" as &[u8]),
-            ("data/resource.d/file2.txt", b"Test content" as &[u8]),
-            ("data/resource.d/file3.txt", b"Another file" as &[u8]),
+pub struct TestData {
+    directory: PathBuf,
+}
+
+impl TestData {
+    pub fn new() -> io::Result<Self> {
+        let directory =
+            std::env::temp_dir().join(format!("one_seek_one_read-{:032x}", rand::random::<u128>()));
+        fs::create_dir(&directory)?;
+        let data = Self { directory };
+
+        let resources = data.directory.join("resource.d");
+        fs::create_dir(&resources)?;
+        let mut archive = fs::File::create(data.archive_path())?;
+        let mut index = fs::File::create(data.index_path())?;
+
+        let files: [(&str, &[u8]); 3] = [
+            ("file1.txt", b"Hello, World!"),
+            ("file2.txt", b"Test content"),
+            ("file3.txt", b"Another file"),
         ];
-        
-        // Ensure parent directory exists
-        fs::create_dir_all("data/resource.d")?;
-
-        let mut archive_data = Vec::new();
-        let mut index_content = String::new();
-        let mut _offset = 0;
-
-        for (path, content) in &test_files {
-            let mut file = File::create(path)?;
-            file.write_all(content)?;
-
-            let hash = get_hash(&content.to_vec());
-            let size = content.len();
-            
-            index_content.push_str(&format!("{}\t{}\t{}\n", path, size, hash));
-            
-            archive_data.extend_from_slice(content);
-            _offset += size;
+        for (name, content) in files {
+            let path = resources.join(name);
+            fs::write(&path, content)?;
+            writeln!(
+                index,
+                "{}\t{}\t{}",
+                path.display(),
+                content.len(),
+                get_hash(&content.to_vec())
+            )?;
+            archive.write_all(content)?;
         }
 
-        let mut archive_file = File::create("data/archive.data")?;
-        archive_file.write_all(&archive_data)?;
-
-        let mut index_file = File::create("data/resource.index")?;
-        index_file.write_all(index_content.as_bytes())?;
-
-        Ok(())
+        Ok(data)
     }
 
-    pub fn cleanup_test_data() -> std::io::Result<()> {
-        if Path::new("data").exists() {
-            fs::remove_dir_all("data")?;
-        }
-        Ok(())
+    pub fn index_path(&self) -> String {
+        self.directory.join("resource.index").display().to_string()
+    }
+
+    pub fn archive_path(&self) -> String {
+        self.directory.join("archive.data").display().to_string()
+    }
+}
+
+impl Drop for TestData {
+    fn drop(&mut self) {
+        let _ = fs::remove_dir_all(&self.directory);
     }
 }

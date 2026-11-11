@@ -78,20 +78,18 @@ impl Archive {
 fn test_reading_by_hash( ) -> Result< () > {
     use crate::util;
     use crate::index;
-    use crate::test_utils::test_utils;
+    use crate::test_utils::TestData;
 
-    test_utils::setup_test_data()?;
+    let fixture = TestData::new()?;
 
-    let records = index::read_records( util::INDEX_PATH )?;
-    let mut archive = Archive::new( util::ARCHIVE_PATH, &records, true )?;
+    let records = index::read_records( &fixture.index_path() )?;
+    let mut archive = Archive::new( &fixture.archive_path(), &records, true )?;
 
     for ( index, record ) in records.iter( ).enumerate( ) {
         let data = archive.read( index )?;
 
         debug_assert_eq!( util::get_hash( &data ), record.hash );
     }
-
-    test_utils::cleanup_test_data()?;
 
     Ok( () )
 }
